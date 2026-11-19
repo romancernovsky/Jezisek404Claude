@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ježíšek 404 — Screen</title>
+<link rel="icon" href="/img/favicon.svg">
+<link rel="stylesheet" href="/css/screen.css">
+</head>
+<body>
+<div id="viewport">
+  <div id="stage">
+    <div id="world">
+      <div id="bg" class="layer"></div>
+      <div id="wallscreen" style="display:none"></div>
+      <div id="props" class="layer"></div>
+      <div id="actors" class="layer"></div>
+    </div>
+    <div id="fx" class="layer"></div>
+    <canvas id="fxcanvas"></canvas>
+    <div id="hud" class="hidden">
+      <div class="hud-box hud-clock"><div class="t">23 DEC · 18:00</div><div class="l">24 hours to Christmas Eve</div></div>
+      <div class="hud-box meters">
+        <div class="meter" data-k="gifts"><div class="lbl"><span>🎁 Gifts</span><span class="v">0%</span></div><div class="bar"><div class="fill"></div></div></div>
+        <div class="meter" data-k="quality"><div class="lbl"><span>✨ Quality</span><span class="v">—</span></div><div class="bar"><div class="fill"></div></div></div>
+        <div class="meter" data-k="spirit"><div class="lbl"><span>💚 Team spirit</span><span class="v">50%</span></div><div class="bar"><div class="fill"></div></div></div>
+      </div>
+      <div class="hud-box kpi"><div class="k1">JOLLY readiness KPI</div><div class="k2">100% ✅</div></div>
+    </div>
+    <div id="progress"><div class="lbl"><span class="name">GIFTS</span><span class="pc">0%</span></div><div class="bar"><div class="fill"></div></div></div>
+    <div id="subs"><div class="box"></div></div>
+    <div id="card"></div>
+    <div id="review"></div>
+    <div id="credits"></div>
+    <div id="vote"></div>
+    <div id="lobby"></div>
+    <video id="video" playsinline preload="auto"></video>
+  </div>
+</div>
+<div id="arm"><div><h1>🔔 Click to enable sound</h1><p>Then press F for fullscreen. The presenter controls the show from /host.</p></div></div>
+<div id="status"></div>
+<script type="module" src="/js/screen.js"></script>
+</body>
+</html>

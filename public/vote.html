@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#120d2e">
+<title>Ježíšek 404 — Vote</title>
+<link rel="icon" href="/img/favicon.svg">
+<style>
+  :root { --gold: #f6c445; --red: #ff5d73; --cyan: #7ff3ff; --bg: #120d2e; --card: rgba(255,255,255,.08); --font: "Fredoka", "Nunito", "Trebuchet MS", "Segoe UI", system-ui, sans-serif; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; min-height: 100%; background: radial-gradient(ellipse at 50% 0%, #2c1f63, var(--bg) 60%); color: #fff; font-family: var(--font); }
+  body { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; padding: max(16px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom)); }
+  header { text-align: center; margin: 8px 0 18px; }
+  header h1 { margin: 0; font-size: 34px; color: var(--gold); letter-spacing: 1px; text-shadow: 0 3px 0 #9a5a10; }
+  header p { margin: 2px 0 0; opacity: .8; font-size: 16px; }
+  main { width: 100%; max-width: 480px; flex: 1; display: flex; flex-direction: column; }
+  .panel { background: var(--card); border: 2px solid rgba(255,255,255,.12); border-radius: 24px; padding: 22px; text-align: center; }
+  .big { font-size: 26px; font-weight: 700; line-height: 1.25; margin: 6px 0 10px; }
+  .muted { opacity: .8; font-size: 17px; line-height: 1.4; }
+  .jolly { width: 120px; height: 120px; margin: 4px auto 10px; animation: float 3s ease-in-out infinite; }
+  @keyframes float { 50% { transform: translateY(-10px); } }
+  .tag { display: inline-block; background: var(--red); padding: 5px 16px; border-radius: 30px; font-weight: 800; letter-spacing: 2px; font-size: 14px; }
+  .tag.live { animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 50% { transform: scale(1.08); } }
+  .q { font-size: 24px; font-weight: 800; margin: 14px 0 18px; line-height: 1.2; }
+  .opt { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; border: 3px solid rgba(255,255,255,.25); background: rgba(255,255,255,.06); color: #fff; border-radius: 22px; padding: 16px; margin-bottom: 14px; font: inherit; cursor: pointer; transition: transform .15s, border-color .2s, background .2s; min-height: 92px; }
+  .opt:active { transform: scale(.97); }
+  .opt .l { flex: 0 0 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 26px; font-weight: 900; color: #111; }
+  .opt.A .l { background: var(--gold); } .opt.B .l { background: var(--cyan); }
+  .opt .ic { font-size: 34px; }
+  .opt .t { font-size: 21px; font-weight: 800; line-height: 1.1; }
+  .opt .s { font-size: 15px; opacity: .85; margin-top: 3px; }
+  .opt.sel { border-color: var(--gold); background: rgba(246,196,69,.18); box-shadow: 0 0 30px rgba(246,196,69,.35); }
+  .opt.sel::after { content: "✓"; margin-left: auto; font-size: 30px; color: var(--gold); font-weight: 900; }
+  .opt[disabled] { opacity: .5; }
+  .note { margin-top: 6px; font-size: 15px; opacity: .85; min-height: 22px; }
+  .result .bar { height: 18px; border-radius: 9px; background: rgba(255,255,255,.15); overflow: hidden; margin: 6px 0 14px; }
+  .result .fill { height: 100%; background: var(--gold); width: 0; transition: width 1.2s; }
+  .result .row { text-align: left; font-weight: 700; font-size: 18px; display: flex; justify-content: space-between; }
+  .result .win { color: var(--gold); }
+  .count { font-size: 15px; opacity: .8; margin-top: 8px; }
+  .wait { font-size: 56px; margin: 10px 0; animation: pulse 1.2s infinite; }
+  #conn { position: fixed; top: 0; left: 0; right: 0; background: #b3213b; color: #fff; text-align: center; font-size: 14px; padding: 6px; display: none; z-index: 10; }
+  footer { margin-top: 18px; font-size: 13px; opacity: .55; text-align: center; }
+</style>
+</head>
+<body>
+<div id="conn">Reconnecting… your vote is safe.</div>
+<header><h1>JEŽÍŠEK 404</h1><p>Christmas Not Found · help save Christmas</p></header>
+<main id="app"><div class="panel"><p class="muted">Connecting…</p></div></main>
+<footer>Anonymous · no login · one vote per phone (you can change it while voting is open)</footer>
+<script type="module">
+const $ = (s) => document.querySelector(s);
+const app = $('#app');
+const ICONS = { siren: '🚨', check: '✅', robot: '🤖', hammer: '🔨', form: '📋', bolt: '⚡', drone: '🛸', sleigh: '🛷' };
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const JOLLY = `<svg class="jolly" viewBox="0 0 300 330"><rect x="118" y="10" width="64" height="40" rx="8" fill="#f6c445"/><circle cx="150" cy="170" r="118" fill="#ff5d73" stroke="#8c1a2f" stroke-width="5"/><rect x="78" y="98" width="144" height="118" rx="38" fill="#141a33"/><path d="M100 152 q15 -20 30 0 M170 152 q15 -20 30 0" stroke="#7ff3ff" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M126 184 q24 18 48 0" stroke="#7ff3ff" stroke-width="6" fill="none" stroke-linecap="round"/></svg>`;
+
+let deviceId = null;
+try { deviceId = localStorage.getItem('jezisek-device'); } catch {}
+if (!deviceId) { deviceId = (crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36)).replace(/[^A-Za-z0-9_-]/g, ''); try { localStorage.setItem('jezisek-device', deviceId); } catch {} }
+
+let state = null;
+let myVotes = {};                 // decisionKey -> option
+try { myVotes = JSON.parse(sessionStorage.getItem('jezisek-votes') || '{}'); } catch {}
+let revealSeenAt = {};            // decision closedAt -> local time first seen
+let lastRenderKey = '';
+let sending = false;
+
+const keyOf = (d) => d ? `${d.id}:${d.openedAt || ''}` : '';
+
+function render() {
+  const s = state; if (!s) return;
+  const d = s.decision;
+  let key = `${s.phase}|${d?.id}|${myVotes[keyOf(d)]}|${s.voting}`;
+  if (s.phase === 'revealed') {
+    const seen = revealSeenAt[d.closedAt] ||= Date.now();
+    const show = Date.now() - seen >= (s.phoneDelay || 0) * 1000;
+    key += show ? '|show' : '|wait';
+    if (!show) setTimeout(render, 500);
+  }
+  if (key === lastRenderKey) { const c = $('.count .n'); if (c && d) c.textContent = d.total; return; }
+  lastRenderKey = key;
+
+  if (s.phase === 'voting') {
+    if (s.voting === 'hands') { app.innerHTML = `<div class="panel"><span class="tag live">RAISE YOUR HAND</span><div class="q">${esc(d.question)}</div><p class="muted">This vote happens by show of hands in the room. Watch the screen!</p></div>`; return; }
+    const mine = myVotes[keyOf(d)];
+    app.innerHTML = `<div class="panel"><span class="tag live">VOTE NOW</span><div class="q">${esc(d.question)}</div>
+      ${Object.entries(d.options).map(([k, o], i) => `<button class="opt ${'AB'[i]} ${mine === k ? 'sel' : ''}" data-k="${k}"><span class="l">${'AB'[i]}</span><span class="ic">${ICONS[o.icon] || '⭐'}</span><span><div class="t">${esc(o.label)}</div><div class="s">${esc(o.sub)}</div></span></button>`).join('')}
+      <div class="note">${mine ? 'Vote received ✓ You can still change it.' : 'Tap your choice.'}</div><div class="count"><span class="n">${d.total}</span> votes so far</div></div>`;
+    app.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => vote(b.dataset.k)));
+    return;
+  }
+  if (s.phase === 'decision') {
+    app.innerHTML = `<div class="panel"><span class="tag">GET READY</span><div class="q">${esc(d.question)}</div><div class="wait">⏳</div><p class="muted">Voting opens in a moment. Keep this page open!</p></div>`;
+    return;
+  }
+  if (s.phase === 'revealed') {
+    const mine = myVotes[keyOf(d)];
+    if (key.endsWith('|wait') || !d.winner) {
+      app.innerHTML = `<div class="panel"><span class="tag">VOTING CLOSED</span><div class="wait">👀</div><div class="big">Watch the screen for the result!</div>${mine ? `<p class="muted">You voted: <b>${esc(d.options[mine]?.label)}</b></p>` : ''}</div>`;
+      return;
+    }
+    const total = d.counts ? Object.values(d.counts).reduce((a, b) => a + b, 0) : 0;
+    app.innerHTML = `<div class="panel result"><span class="tag">DECIDED</span><div class="q">${esc(d.options[d.winner].label)} ${ICONS[d.options[d.winner].icon] || ''}</div>
+      ${!d.manual && total ? Object.entries(d.options).map(([k, o]) => { const pc = Math.round((d.counts[k] / total) * 100); return `<div class="row ${k === d.winner ? 'win' : ''}"><span>${esc(o.label)}</span><span>${pc}%</span></div><div class="bar"><div class="fill" style="width:${pc}%"></div></div>`; }).join('') : '<p class="muted">Decided by the room.</p>'}
+      <p class="muted">${mine ? (mine === d.winner ? 'You were with the majority! 🎉' : 'Not your pick this time — the story goes on! 😄') : 'Watch what happens next…'}</p></div>`;
+    return;
+  }
+  if (s.phase === 'ended') {
+    app.innerHTML = `<div class="panel">${JOLLY}<div class="big">Thank you for saving Christmas! 🎄</div><p class="muted">Happy holidays from IT. You may now close this page.</p></div>`;
+    return;
+  }
+  // lobby / playing
+  app.innerHTML = `<div class="panel">${JOLLY}<div class="big">${s.phase === 'lobby' ? 'You’re in! 🎄' : 'The story is running…'}</div><p class="muted">Watch the big screen. When Ježíšek needs your help, the vote will pop up <b>right here</b>.</p><p class="muted">Remote? The broadcast may lag a little — the vote stays open long enough for everyone.</p></div>`;
+}
+
+async function vote(option) {
+  const d = state?.decision; if (!d || sending) return;
+  const prev = myVotes[keyOf(d)];
+  myVotes[keyOf(d)] = option; save(); render();
+  navigator.vibrate?.(30);
+  sending = true;
+  try {
+    const r = await fetch('/api/vote', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ deviceId, option, decision: d.id }) });
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Vote failed'); }
+  } catch (e) {
+    if (prev) myVotes[keyOf(d)] = prev; else delete myVotes[keyOf(d)];
+    save(); lastRenderKey = ''; render();
+    const n = $('.note'); if (n) n.textContent = `⚠️ ${e.message}. Try again.`;
+  } finally { sending = false; }
+}
+function save() { try { sessionStorage.setItem('jezisek-votes', JSON.stringify(myVotes)); } catch {} }
+
+function onState(s) {
+  if (s.phase === 'voting' && state && state.phase !== 'voting') navigator.vibrate?.([60, 40, 60]);
+  state = s; render();
+}
+
+// Live connection with polling fallback
+let es, pollTimer, lastMsg = Date.now();
+function connect() {
+  es = new EventSource('/api/events?role=phone');
+  es.addEventListener('state', (e) => { lastMsg = Date.now(); $('#conn').style.display = 'none'; onState(JSON.parse(e.data)); });
+  es.onerror = () => { $('#conn').style.display = 'block'; };
+}
+async function poll() {
+  if (Date.now() - lastMsg < 25000) return;
+  try { const r = await fetch('/api/state'); if (r.ok) { onState(await r.json()); $('#conn').style.display = 'none'; } } catch {}
+}
+connect();
+pollTimer = setInterval(poll, 5000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastMsg = 0; poll(); } });
+</script>
+</body>
+</html>

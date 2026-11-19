@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0f1222">
+<title>Ježíšek 404 — Host</title>
+<link rel="icon" href="/img/favicon.svg">
+<style>
+  :root { --bg: #0f1222; --panel: #181c33; --line: #2a2f4d; --text: #eef0ff; --muted: #9aa0c3; --gold: #f6c445; --red: #ff5d73; --green: #5fd38a; --cyan: #7ff3ff; --font: "Segoe UI", system-ui, -apple-system, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; }
+  header { display: flex; align-items: center; gap: 14px; padding: 10px 18px; background: #0b0d1a; border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header h1 { font-size: 18px; margin: 0; color: var(--gold); }
+  .pill { padding: 4px 10px; border-radius: 20px; background: var(--line); font-size: 13px; font-weight: 600; }
+  .pill.ok { background: #1f5c3a; } .pill.bad { background: #7a1f2e; } .pill.phase { background: #3b2f7a; text-transform: uppercase; letter-spacing: 1px; }
+  .spacer { flex: 1; }
+  main { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(320px, 1fr); gap: 16px; padding: 16px; max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  section { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; margin-bottom: 16px; }
+  section h2 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); }
+  button { font: inherit; border: 0; border-radius: 10px; padding: 10px 14px; background: #2c3256; color: var(--text); cursor: pointer; font-weight: 600; }
+  button:hover:not([disabled]) { filter: brightness(1.2); }
+  button[disabled] { opacity: .35; cursor: not-allowed; }
+  #main-action { width: 100%; font-size: 26px; padding: 22px; border-radius: 14px; background: var(--gold); color: #1a1300; font-weight: 800; }
+  #main-action.voting { background: var(--red); color: #fff; animation: pulse 1.2s infinite; }
+  @keyframes pulse { 50% { filter: brightness(1.25); } }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+  .row > button { flex: 1; min-width: 120px; }
+  .pick { background: #3a2f12; border: 2px solid var(--gold); }
+  .pick.b { background: #123a3d; border-color: var(--cyan); }
+  .danger { background: #5c1a26; }
+  .hint { color: var(--muted); font-size: 13px; margin-top: 8px; line-height: 1.4; }
+  .tele .now { font-size: 22px; line-height: 1.35; padding: 12px 14px; background: #0b0d1a; border-left: 4px solid var(--gold); border-radius: 8px; min-height: 64px; }
+  .tele .who { font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; display: block; }
+  .tele .next { color: var(--muted); margin-top: 8px; font-size: 15px; }
+  .tele .meta { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; margin-bottom: 8px; }
+  .progress { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-top: 10px; }
+  .progress div { height: 100%; background: var(--gold); width: 0; transition: width .4s; }
+  .votes .opt { margin: 10px 0; }
+  .votes .lbl { display: flex; justify-content: space-between; font-weight: 700; font-size: 17px; }
+  .votes .bar { height: 26px; background: var(--line); border-radius: 8px; overflow: hidden; margin-top: 4px; }
+  .votes .fill { height: 100%; background: var(--gold); transition: width .4s; }
+  .votes .opt.b .fill { background: var(--cyan); }
+  .votes .total { font-size: 34px; font-weight: 800; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .stat { background: #0b0d1a; border-radius: 10px; padding: 8px; text-align: center; }
+  .stat b { display: block; font-size: 22px; } .stat span { color: var(--muted); font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { background: #0b0d1a; border: 1px solid var(--line); padding: 3px 8px; border-radius: 12px; font-size: 12px; }
+  .chip.on { border-color: var(--green); color: var(--green); }
+  label { color: var(--muted); font-size: 13px; display: block; margin-bottom: 4px; }
+  select, input { font: inherit; background: #0b0d1a; color: var(--text); border: 1px solid var(--line); border-radius: 8px; padding: 8px; width: 100%; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  iframe { width: 100%; aspect-ratio: 16/9; border: 1px solid var(--line); border-radius: 10px; background: #000; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td, th { padding: 5px 6px; border-bottom: 1px solid var(--line); text-align: left; }
+  td button { padding: 4px 8px; font-size: 12px; }
+  .end-A { color: var(--green); font-weight: 800; } .end-B { color: var(--gold); font-weight: 800; } .end-C { color: var(--red); font-weight: 800; }
+  #pinbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; place-items: center; z-index: 20; }
+  #pinbox .box { background: var(--panel); padding: 24px; border-radius: 14px; width: 300px; }
+  #toast { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%); background: #7a1f2e; padding: 10px 16px; border-radius: 10px; display: none; z-index: 30; }
+  kbd { background: #0b0d1a; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; font-size: 12px; }
+  a { color: var(--cyan); }
+</style>
+</head>
+<body>
+<header>
+  <h1>🎄 Ježíšek 404 · Host</h1>
+  <span id="conn" class="pill bad">offline</span>
+  <span id="phase" class="pill phase">—</span>
+  <span id="paused" class="pill" style="display:none;background:#7a5a10">⏸ PAUSED</span>
+  <span class="spacer"></span>
+  <span class="pill">📱 <b id="phones">0</b> phones</span>
+  <span class="pill">🖥 <b id="screens">0</b> screens</span>
+  <a class="pill" href="/screen" target="_blank">Open screen ↗</a>
+  <a class="pill" href="/map" target="_blank">Story map ↗</a>
+</header>
+<main>
+  <div>
+    <section>
+      <h2>Show control</h2>
+      <button id="main-action">Start show</button>
+      <div class="row">
+        <button id="pause">⏸ Pause</button>
+        <button id="skip">⏭ Skip scene</button>
+        <button id="reopen">↺ Re-open vote</button>
+      </div>
+      <div class="row">
+        <button class="pick" id="pickA">✋ A wins</button>
+        <button class="pick b" id="pickB">✋ B wins</button>
+      </div>
+      <div class="hint">Keys: <kbd>Enter</kbd> main action · <kbd>Space</kbd> pause/resume · <kbd>1</kbd>/<kbd>2</kbd> pick A/B (hand vote or override) · <kbd>S</kbd> skip scene. The manual pick overrides phone votes at any time during a decision.</div>
+    </section>
+
+    <section class="tele">
+      <h2>Now playing</h2>
+      <div class="meta"><span id="scene-title">—</span><span id="beat-count"></span></div>
+      <div class="now" id="now">The show has not started.</div>
+      <div class="next" id="next"></div>
+      <div class="progress"><div id="beat-bar"></div></div>
+    </section>
+
+    <section class="votes" id="votes-section">
+      <h2>Decision</h2>
+      <div id="votes"><div class="hint">No decision on screen right now.</div></div>
+    </section>
+
+    <section>
+      <h2>Story state</h2>
+      <div class="stats">
+        <div class="stat"><b id="st-hours">24</b><span>hours left</span></div>
+        <div class="stat"><b id="st-gifts">0%</b><span>gifts</span></div>
+        <div class="stat"><b id="st-quality">—</b><span>quality</span></div>
+        <div class="stat"><b id="st-spirit">50%</b><span>team spirit</span></div>
+      </div>
+      <div class="chips" id="choices"></div>
+      <div class="chips" id="flags"></div>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>Confidence monitor</h2>
+      <iframe id="preview" src="/screen?preview&autoplay" title="Screen preview" loading="lazy"></iframe>
+      <div class="hint">Silent mirror of the audience screen. The real screen (projector / broadcast feed) is <a href="/screen" target="_blank">/screen</a>.</div>
+    </section>
+
+    <section>
+      <h2>Audience voting</h2>
+      <div class="grid2">
+        <div><label>Voting mode</label><select id="voting"><option value="phones">📱 Phones + hands</option><option value="hands">✋ Hands only (no QR)</option></select></div>
+        <div><label>Phone result delay (broadcast lag): <b id="delay-v">15</b> s</label><input id="delay" type="range" min="0" max="60" step="1" value="15"></div>
+      </div>
+      <div class="hint">Phones show the result only after this delay, so remote viewers see the reveal on the stream first. Measure your stream lag in rehearsal and set it here.</div>
+      <div class="hint">Join URL shown on screen: <b id="joinurl">—</b></div>
+    </section>
+
+    <section>
+      <h2>Rehearsal · jump anywhere</h2>
+      <div class="grid4" id="path"></div>
+      <div class="row">
+        <select id="jump-scene"></select>
+        <button id="jump">Jump</button>
+      </div>
+      <div class="hint">Pick earlier choices, then jump to a scene or straight to a decision. The screen replays from there. Use <code>/screen?speed=3</code> to fast-forward rehearsals.</div>
+      <details style="margin-top:10px"><summary>All 16 paths &amp; endings</summary><table id="paths"></table></details>
+    </section>
+
+    <section>
+      <h2>Danger zone</h2>
+      <div class="row"><button class="danger" id="restart">⟲ Restart show (back to lobby)</button></div>
+    </section>
+  </div>
+</main>
+<div id="pinbox"><div class="box"><h3 style="margin-top:0">Host PIN</h3><input id="pin" type="password" inputmode="numeric" autocomplete="off"><div class="row"><button id="pin-ok">Unlock</button></div></div></div>
+<div id="toast"></div>
+<script type="module">
+import { SCENES, CAST, beatsFor, DECISIONS, outcome } from '/shared/story.js';
+import { DECISION_ORDER, allPaths, playPath } from '/shared/model.js';
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+let PIN = ''; try { PIN = sessionStorage.getItem('jezisek-pin') || new URLSearchParams(location.search).get('pin') || ''; } catch {}
+let S = null;
+
+function toast(msg) { const t = $('#toast'); t.textContent = msg; t.style.display = 'block'; clearTimeout(toast.t); toast.t = setTimeout(() => (t.style.display = 'none'), 3500); }
+async function cmd(name, arg = {}) {
+  try {
+    const r = await fetch(`/api/host/${name}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Host-Pin': PIN }, body: JSON.stringify(arg) });
+    if (r.status === 401) { askPin(); return; }
+    const j = await r.json(); if (!r.ok) throw new Error(j.error); render(j);
+  } catch (e) { toast(`Command failed: ${e.message}`); }
+}
+function askPin() { $('#pinbox').style.display = 'grid'; $('#pin').focus(); }
+$('#pin-ok').onclick = () => { PIN = $('#pin').value; try { sessionStorage.setItem('jezisek-pin', PIN); } catch {} $('#pinbox').style.display = 'none'; connect(); };
+$('#pin').onkeydown = (e) => { if (e.key === 'Enter') $('#pin-ok').click(); };
+
+// ---------------------------------------------------------------- main action
+function mainAction() {
+  if (!S) return null;
+  switch (S.phase) {
+    case 'lobby': return { label: '▶ Start show', run: () => cmd('start') };
+    case 'playing': return { label: S.paused ? '▶ Resume' : '🎬 Story playing…', run: S.paused ? () => cmd('resume') : null };
+    case 'decision': return { label: S.voting === 'hands' ? '✋ Ask the room — then pick A or B' : '🗳 Open voting', run: () => cmd('openVote') };
+    case 'voting': return { label: S.voting === 'hands' ? '✋ Pick A or B below' : '🔒 Close voting & reveal', run: S.voting === 'hands' ? null : () => cmd('closeVote'), cls: 'voting' };
+    case 'revealed': return S.decision?.winner ? { label: `▶ Continue: ${S.decision.options[S.decision.winner].label}`, run: () => cmd('continue') } : { label: 'Tie! Pick A or B below', run: null };
+    case 'ended': return { label: '⟲ Back to lobby', run: () => cmd('restart') };
+    default: return null;
+  }
+}
+$('#main-action').onclick = () => mainAction()?.run?.();
+$('#pause').onclick = () => cmd(S?.paused ? 'resume' : 'pause');
+$('#skip').onclick = () => cmd('skipScene');
+$('#reopen').onclick = () => cmd('openVote');
+$('#pickA').onclick = () => pick(0);
+$('#pickB').onclick = () => pick(1);
+function pick(i) { const k = Object.keys(S?.decision?.options || {})[i]; if (k) cmd('pick', { option: k }); }
+$('#restart').onclick = () => { if (confirm('Restart the whole show and go back to the lobby?')) cmd('restart'); };
+$('#voting').onchange = (e) => cmd('setVoting', { mode: e.target.value });
+$('#delay').oninput = (e) => { $('#delay-v').textContent = e.target.value; };
+$('#delay').onchange = (e) => cmd('setDelay', { seconds: Number(e.target.value) });
+
+addEventListener('keydown', (e) => {
+  if (['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'Enter') { e.preventDefault(); $('#main-action').click(); }
+  else if (e.key === ' ') { e.preventDefault(); $('#pause').click(); }
+  else if (e.key === '1') pick(0);
+  else if (e.key === '2') pick(1);
+  else if (e.key === 's' || e.key === 'S') $('#skip').click();
+});
+
+// ---------------------------------------------------------------- render
+function render(s) {
+  S = s;
+  $('#phase').textContent = s.phase;
+  $('#paused').style.display = s.paused ? '' : 'none';
+  $('#phones').textContent = s.clients?.phone ?? 0;
+  $('#screens').textContent = s.clients?.screen ?? 0;
+  const a = mainAction(); const b = $('#main-action');
+  b.textContent = a?.label || '—'; b.disabled = !a?.run; b.className = a?.cls || '';
+  $('#pause').textContent = s.paused ? '▶ Resume' : '⏸ Pause';
+  $('#skip').disabled = s.phase !== 'playing';
+  const inDecision = ['decision', 'voting', 'revealed'].includes(s.phase);
+  $('#pickA').disabled = $('#pickB').disabled = !inDecision;
+  $('#reopen').disabled = !(s.phase === 'revealed' && s.voting === 'phones');
+  if (inDecision) { const k = Object.keys(s.decision.options); $('#pickA').textContent = `✋ A: ${s.decision.options[k[0]].label}`; $('#pickB').textContent = `✋ B: ${s.decision.options[k[1]].label}`; }
+  else { $('#pickA').textContent = '✋ A wins'; $('#pickB').textContent = '✋ B wins'; }
+  $('#voting').value = s.voting;
+  if (document.activeElement !== $('#delay')) { $('#delay').value = s.phoneDelay; $('#delay-v').textContent = s.phoneDelay; }
+
+  // teleprompter
+  if (s.sceneId && s.phase === 'playing') {
+    const beats = beatsFor(s.sceneId, s.story);
+    const i = Math.min(s.beat, beats.length - 1);
+    const line = (bt) => !bt ? '' : bt.text ? `<span class="who" style="color:${CAST[bt.who]?.color}">${esc(bt.alsoSpeaking ? 'Everyone' : CAST[bt.who]?.name)}</span>${esc(bt.text)}` : bt.card ? `<span class="who">Title card</span>${esc(bt.card.title)} — ${esc(bt.card.sub || '')}` : bt.review ? '<span class="who">Post-incident review</span>' : bt.credits ? '<span class="who">Credits</span>' : '<span class="who">Action</span>…';
+    $('#scene-title').textContent = `Act ${SCENES[s.sceneId].act} · ${SCENES[s.sceneId].title}`;
+    $('#beat-count').textContent = `beat ${i + 1}/${beats.length}`;
+    $('#now').innerHTML = line(beats[i]);
+    $('#next').innerHTML = beats[i + 1] ? `Next: ${line(beats[i + 1]).replace(/<span class="who"[^>]*>/, '<b>').replace('</span>', ':</b> ')}` : 'Next: end of scene';
+    $('#beat-bar').style.width = `${((i + 1) / beats.length) * 100}%`;
+  } else if (inDecision) {
+    $('#scene-title').textContent = 'Audience decision'; $('#beat-count').textContent = '';
+    $('#now').innerHTML = `<span class="who">Say to the room</span>${esc(s.decision.question)}`;
+    $('#next').innerHTML = s.phase === 'decision' ? 'Tip: “Grab your phones — or get ready to raise your hand!”' : s.phase === 'voting' ? 'Keep voting open ~30–45 s so remote viewers can catch up.' : 'Let the result sink in, then continue.';
+  } else {
+    $('#scene-title').textContent = s.phase === 'ended' ? 'The end' : 'Lobby'; $('#beat-count').textContent = '';
+    $('#now').textContent = s.phase === 'ended' ? 'Show finished. Thank the audience!' : 'Show the screen with the QR code while people arrive. Press Start when ready.';
+    $('#next').textContent = '';
+  }
+
+  // votes
+  if (inDecision) {
+    const d = s.decision; const total = Object.values(d.counts || {}).reduce((x, y) => x + y, 0);
+    $('#votes').innerHTML = `<div style="font-weight:700;margin-bottom:6px">${esc(d.question)}</div>
+      ${Object.entries(d.options).map(([k, o], i) => { const n = d.counts?.[k] || 0; const pc = total ? Math.round(n / total * 100) : 0; return `<div class="opt ${i ? 'b' : 'a'}"><div class="lbl"><span>${'AB'[i]} · ${esc(o.label)} ${d.winner === k ? '🏆' : ''}</span><span>${n} · ${pc}%</span></div><div class="bar"><div class="fill" style="width:${pc}%"></div></div></div>`; }).join('')}
+      <div class="total">${total} <span style="font-size:14px;color:var(--muted)">votes ${s.phase === 'voting' && d.openedAt ? `· open ${Math.round((Date.now() - d.openedAt) / 1000)} s` : ''}</span></div>
+      ${d.tie && s.phase === 'revealed' ? '<div class="hint" style="color:var(--gold)">Tie — pick the winner with A/B.</div>' : ''}${d.manual ? '<div class="hint">Decided manually.</div>' : ''}`;
+  } else $('#votes').innerHTML = '<div class="hint">No decision on screen right now.</div>';
+
+  // story state
+  const st = s.story;
+  $('#st-hours').textContent = st.hours; $('#st-gifts').textContent = `${st.gifts}%`; $('#st-quality').textContent = st.gifts ? `${st.quality}%` : '—'; $('#st-spirit').textContent = `${st.spirit}%`;
+  $('#choices').innerHTML = DECISION_ORDER.map((d) => `<span class="chip ${st.choices[d] ? 'on' : ''}">${d.toUpperCase()}: ${st.choices[d] ? esc(DECISIONS[d].options[st.choices[d]].label) : '—'}</span>`).join('');
+  $('#flags').innerHTML = Object.entries(st.flags).filter(([, v]) => v).map(([k]) => `<span class="chip">${esc(k)}</span>`).join('');
+}
+
+// ---------------------------------------------------------------- rehearsal tools
+$('#path').innerHTML = DECISION_ORDER.map((d) => `<div><label>${d.toUpperCase()}</label><select data-d="${d}"><option value="">—</option>${Object.entries(DECISIONS[d].options).map(([k, o]) => `<option value="${k}">${esc(o.label)}</option>`).join('')}</select></div>`).join('');
+$('#jump-scene').innerHTML = Object.entries(SCENES).map(([id, sc]) => `<option value="${id}">Act ${sc.act} · ${esc(sc.title)} (${id})</option>`).join('') + DECISION_ORDER.map((d) => `<option value="decision:${d}">🗳 Decision ${d.toUpperCase()}: ${esc(DECISIONS[d].question)}</option>`).join('');
+$('#jump').onclick = () => {
+  const path = [...document.querySelectorAll('#path select')].map((x) => x.value);
+  const cut = path.indexOf(''); const p = cut === -1 ? path : path.slice(0, cut);
+  const v = $('#jump-scene').value;
+  if (v.startsWith('decision:')) { const d = v.slice(9); const idx = DECISION_ORDER.indexOf(d); cmd('jump', { path: p.slice(0, idx), decision: d }); }
+  else cmd('jump', { sceneId: v, path: p });
+};
+const ENDN = { A: 'Saved!', B: 'Sort of', C: 'Not Found' };
+$('#paths').innerHTML = '<tr><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>Ending</th><th></th></tr>' + allPaths().map((p) => { const o = outcome(playPath(p)); return `<tr>${p.map((x, i) => `<td>${esc(DECISIONS[DECISION_ORDER[i]].options[x].label)}</td>`).join('')}<td class="end-${o.ending}">${o.ending} · ${ENDN[o.ending]}</td><td><button data-p="${p.join(',')}">Load</button></td></tr>`; }).join('');
+$('#paths').onclick = (e) => { const p = e.target.dataset?.p; if (!p) return; p.split(',').forEach((v, i) => (document.querySelectorAll('#path select')[i].value = v)); toast('Path loaded — choose a scene and press Jump'); };
+
+// ---------------------------------------------------------------- connection
+let es;
+async function connect() {
+  try { const c = await (await fetch('/api/config')).json(); $('#joinurl').textContent = c.publicUrl || `${location.origin}/ (set PUBLIC_URL for the real address)`; if (c.pinRequired && !PIN) return askPin(); } catch {}
+  es?.close();
+  es = new EventSource(`/api/events?role=host&pin=${encodeURIComponent(PIN)}`);
+  es.addEventListener('state', (e) => { $('#conn').textContent = 'live'; $('#conn').className = 'pill ok'; render(JSON.parse(e.data)); });
+  es.onerror = () => { $('#conn').textContent = 'reconnecting…'; $('#conn').className = 'pill bad'; };
+  if (PIN) { $('#preview').src = `/screen?preview&autoplay&pin=${encodeURIComponent(PIN)}`; }
+}
+setInterval(() => { if (S?.phase === 'voting') render(S); }, 1000);
+connect();
+</script>
+</body>
+</html>

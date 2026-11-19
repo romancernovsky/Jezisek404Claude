@@ -1,0 +1,22 @@
+{
+  "name": "jezisek-404",
+  "version": "1.0.0",
+  "description": "Je\u017e\u00ed\u0161ek 404: Christmas Not Found \u2014 an interactive, audience-voted Christmas comedy for a hybrid IT town hall.",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "test": "node --test tests/*.test.js",
+    "voices": "NODE_USE_ENV_PROXY=1 node scripts/generate-voices.mjs",
+    "export-docs": "node scripts/export-docs.mjs",
+    "keyframes": "node scripts/export-keyframes.mjs",
+    "videos": "node scripts/video-manifest.mjs",
+    "timing": "node scripts/timing.mjs",
+    "e2e": "node scripts/e2e.mjs"
+  },
+  "license": "UNLICENSED"
+}
