@@ -1,0 +1,15 @@
+# Files NOT uploaded by "gcloud run deploy --source" (same as .dockerignore)
+.git
+.github
+node_modules
+data
+tests
+docs
+scripts
+deploy
+*.md
+*.log
+.env
+.env.*
+compose.yaml
+public/video/keyframes

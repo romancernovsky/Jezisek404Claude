@@ -1,0 +1,20 @@
+# Local test deployment:   docker compose up --build
+# then open http://localhost:8080/screen and http://localhost:8080/host
+# Phones on the same Wi-Fi: http://<your-computer-IP>:8080/  (set PUBLIC_URL so the QR code shows it)
+services:
+  jezisek:
+    build: .
+    image: jezisek-404:local
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      PORT: 8080
+      PUBLIC_URL: ${PUBLIC_URL:-}
+      HOST_PIN: ${HOST_PIN:-}
+    volumes:
+      - jezisek-data:/app/data   # show state survives container restarts
+    restart: unless-stopped
+    stop_grace_period: 10s
+
+volumes:
+  jezisek-data:

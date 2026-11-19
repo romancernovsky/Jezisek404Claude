@@ -1,7 +1,10 @@
 #!/usr/bin/env node
-// End-to-end rehearsal: starts the server, opens the big screen and N simulated phones in Chromium,
-// plays a full path at high speed with real phone votes, and fails on any console error.
+// End-to-end rehearsal: starts the server (or uses a running deployment), opens the big screen and
+// N simulated phones in Chromium, plays a full path at high speed with real phone votes, and fails on
+// any console error.
 //   node scripts/e2e.mjs alarm,ai,book,sleigh [--shots dir] [--speed 8]
+//   node scripts/e2e.mjs alarm,ai,book,sleigh --url http://localhost:8080 --pin 1234   # test a deployment
+// NOTE: against a deployment this restarts the show — never run it during the live event.
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -14,13 +17,18 @@ const args = process.argv.slice(2);
 const path = (args.find((a) => !a.startsWith('--') && a.includes(',')) || 'alarm,ai,book,sleigh').split(',');
 const shotDir = args.includes('--shots') ? args[args.indexOf('--shots') + 1] : null;
 const speed = args.includes('--speed') ? args[args.indexOf('--speed') + 1] : '8';
+const opt = (name) => (args.includes(name) ? args[args.indexOf(name) + 1] : null);
+const URL_ARG = opt('--url');
+const PIN = opt('--pin') || '';
 const PHONES = 6;
 if (shotDir) fs.mkdirSync(shotDir, { recursive: true });
 
-const server = createServer({ persist: false, pin: '' });
-await new Promise((r) => server.listen(0, r));
-const base = `http://127.0.0.1:${server.address().port}`;
-const host = (cmd, arg = {}) => fetch(`${base}/api/host/${cmd}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(arg) }).then((r) => r.json());
+let server = null, base;
+if (URL_ARG) base = URL_ARG.replace(/\/$/, '');
+else { server = createServer({ persist: false, pin: '' }); await new Promise((r) => server.listen(0, r)); base = `http://127.0.0.1:${server.address().port}`; }
+const host = (cmd, arg = {}) => fetch(`${base}/api/host/${cmd}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Host-Pin': PIN }, body: JSON.stringify(arg) }).then((r) => { if (r.status === 401) throw new Error('Wrong or missing --pin'); return r.json(); });
+const getShow = async () => (server ? server.getShow() : (await fetch(`${base}/api/state`)).json());
+await host('restart');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const browser = await playwright.chromium.launch();
@@ -28,7 +36,7 @@ const errors = [];
 const screen = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 screen.on('pageerror', (e) => errors.push(`screen: ${e.message}`));
 screen.on('console', (m) => { if (m.type() === 'error' && !/404/.test(m.text())) errors.push(`screen console: ${m.text()}`); });
-await screen.goto(`${base}/screen?autoplay&speed=${speed}`);
+await screen.goto(`${base}/screen?autoplay&speed=${speed}&pin=${encodeURIComponent(PIN)}`);
 const phones = [];
 for (let i = 0; i < PHONES; i++) {
   const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
@@ -45,7 +53,7 @@ const seen = [];
 let di = 0;
 const t0 = Date.now();
 while (Date.now() - t0 < 240000) {
-  const s = server.getShow();
+  const s = await getShow();
   if (s.phase === 'playing' && seen.at(-1) !== s.sceneId) { seen.push(s.sceneId); await sleep(1800); await shot(s.sceneId); }
   if (s.phase === 'decision') {
     await host('openVote'); await sleep(500);
@@ -64,10 +72,10 @@ while (Date.now() - t0 < 240000) {
   if (s.phase === 'ended') break;
   await sleep(150);
 }
-const final = server.getShow();
+const final = await getShow();
 await sleep(1500); await shot('end');
 if (shotDir) await phones[1].screenshot({ path: `${shotDir}/phone-end.png` });
-await browser.close(); server.close();
+await browser.close(); server?.close();
 console.log(`path ${path.join(' → ')}`);
 console.log(`scenes: ${seen.join(' → ')}`);
 console.log(`phase: ${final.phase}, ending scene: ${seen.find((x) => x.startsWith('s6_'))}, ${((Date.now() - t0) / 1000).toFixed(0)} s at speed ${speed}`);

@@ -145,18 +145,35 @@ export function createServer(opts = {}) {
       }
 
       if (p === '/api/qr.svg') {
-        const target = url.searchParams.get('u') || PUBLIC_URL || `http://${req.headers.host}/`;
+        const target = url.searchParams.get('u') || publicUrlFor(req);
         res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' });
         return res.end(qrSvg(target.slice(0, 300)));
       }
 
-      if (p === '/api/config') return json(res, 200, { publicUrl: PUBLIC_URL, pinRequired: !!PIN });
+      if (p === '/api/config') return json(res, 200, { publicUrl: publicUrlFor(req), pinRequired: !!PIN });
+      if (p === '/healthz') return json(res, 200, { ok: true, phase: show.phase, clients: counts() });
 
       return serveStatic(p, res);
     } catch (e) {
       json(res, e.status || 500, { error: e.message });
     }
   });
+
+  // Behind Cloud Run / a reverse proxy the request arrives as plain HTTP; trust the forwarded scheme.
+  function publicUrlFor(req) {
+    if (PUBLIC_URL) return PUBLIC_URL.endsWith('/') ? PUBLIC_URL : PUBLIC_URL + '/';
+    const proto = String(req.headers['x-forwarded-proto'] || 'http').split(',')[0].trim();
+    return `${proto}://${req.headers['x-forwarded-host'] || req.headers.host}/`;
+  }
+
+  /** Persist state and close live connections (clients reconnect automatically). */
+  server.shutdown = () => {
+    saveState();
+    for (const cl of clients) { try { cl.res.end(); } catch { /* ignore */ } }
+    clients.clear();
+    clearInterval(heartbeat);
+    return new Promise((resolve) => server.close(() => resolve()));
+  };
 
   function broadcastHostOnly() {
     const data = `event: state\ndata: ${JSON.stringify(viewFor('host'))}\n\n`;
@@ -231,7 +248,19 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     console.log(`\n🎄 Ježíšek 404 is running on port ${port}`);
     console.log(`   Screen : http://localhost:${port}/screen`);
     console.log(`   Host   : http://localhost:${port}/host`);
-    console.log(`   Phones : ${process.env.PUBLIC_URL || `http://<this-machine>:${port}/`}`);
-    console.log(`   Map    : http://localhost:${port}/map\n`);
+    console.log(`   Phones : ${process.env.PUBLIC_URL || '(auto: the address the screen is opened with)'}`);
+    console.log(`   Map    : http://localhost:${port}/map`);
+    console.log(`   PIN    : ${process.env.HOST_PIN ? 'enabled' : 'disabled (set HOST_PIN for production)'} · state file: ${process.env.STATE_FILE || 'data/show-state.json'}\n`);
   });
+  // Cloud Run / docker stop send SIGTERM: save the show state before exiting.
+  let stopping = false;
+  for (const sig of ['SIGTERM', 'SIGINT']) {
+    process.on(sig, async () => {
+      if (stopping) return; stopping = true;
+      console.log(`${sig} received — saving state and shutting down`);
+      const t = setTimeout(() => process.exit(0), 5000); t.unref();
+      await server.shutdown();
+      process.exit(0);
+    });
+  }
 }

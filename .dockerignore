@@ -1,7 +1,14 @@
+.git
+.github
 node_modules
 data
-.git
 tests
 docs
 scripts
+deploy
+*.md
 *.log
+.env
+.env.*
+compose.yaml
+public/video/keyframes

@@ -86,3 +86,17 @@ test('static pages, shared modules and QR are served; path traversal is blocked'
     assert.match(qrSvg('hello'), /<path d="M/);
   } finally { server.close(); }
 });
+
+test('health check and public URL detection behind a proxy (Cloud Run)', async () => {
+  const { server, base } = await start();
+  try {
+    const h = await (await fetch(`${base}/healthz`)).json();
+    assert.equal(h.ok, true); assert.equal(h.phase, 'lobby');
+    const local = await (await fetch(`${base}/api/config`)).json();
+    assert.match(local.publicUrl, /^http:\/\/127\.0\.0\.1:\d+\/$/);
+    const proxied = await (await fetch(`${base}/api/config`, { headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-Host': 'jezisek.example.run.app' } })).json();
+    assert.equal(proxied.publicUrl, 'https://jezisek.example.run.app/');
+  } finally { server.close(); }
+  const fixed = await start({ publicUrl: 'https://xmas.example.com' });
+  try { assert.equal((await (await fetch(`${fixed.base}/api/config`)).json()).publicUrl, 'https://xmas.example.com/'); } finally { fixed.server.close(); }
+});

@@ -18,7 +18,19 @@ npm start              # Node ≥ 20, no npm install needed (zero dependencies)
 | http://localhost:8080/map | Branching story map, all 16 paths, full script |
 | http://localhost:8080/screen?solo=1 | Offline mode: no server needed for control, keyboard only |
 
-For the event, deploy with the `Dockerfile` to any HTTPS host, run one instance, and set `PUBLIC_URL` and `HOST_PIN` (see `.env.example`).
+### Docker (local test)
+
+```bash
+docker compose up --build -d      # → http://localhost:8080/screen and /host
+```
+
+### Google Cloud Run (production)
+
+```bash
+PROJECT=<gcp-project> REGION=europe-west3 STATE_BUCKET=<project>-jezisek-state ./deploy/cloud-run-deploy.sh
+```
+
+See **[docs/deployment.md](docs/deployment.md)** for settings, the required Cloud Run flags (single instance, high concurrency for live connections), custom domains and costs.
 
 ## Documentation
 
@@ -28,6 +40,7 @@ For the event, deploy with the `Dockerfile` to any HTTPS host, run one instance,
 | [docs/story-map.md](docs/story-map.md) | **Branching story map**, **decision & consequence model**, ending rules, table of all 16 paths with outcomes and runtimes *(generated)* |
 | [docs/script.md](docs/script.md) | **Complete script & scene storyboards**: setting, cast, every line, actions, effects, conditions *(generated)* |
 | [docs/operator-guide.md](docs/operator-guide.md) | **Event operator guide**: hosting, rehearsal, running the show, recovery |
+| [docs/deployment.md](docs/deployment.md) | Local Docker test deployment and Google Cloud Run production deployment |
 | [docs/video-plan.md](docs/video-plan.md) | Optional Seedance (Higgsfield) clips: 30 s budget, prompts, keyframes |
 
 ## How it is built

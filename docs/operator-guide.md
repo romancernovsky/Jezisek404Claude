@@ -15,11 +15,8 @@ All pages talk to **one server**. Phones of remote participants must reach it, s
 
 ## Hosting (choose one)
 
-1. **Recommended: a small cloud container** (Azure App Service / Container Apps, Google Cloud Run, Render, Fly.io…). Build the included `Dockerfile` and set:
-   - `PUBLIC_URL=https://<your-address>/` (this is what the QR code points to)
-   - `HOST_PIN=<4–6 digits>` (protects `/host` and the screen controls)
-   - Run **exactly one instance** (votes live in memory; the state also persists to `/app/data`). 400 phones are a light load.
-2. **Laptop in the room.** `npm start` on the show laptop works for in-room phones on the same Wi-Fi, but remote viewers can't reach it unless you expose it (e.g. a company-approved tunnel). If you go this way, use hands-only voting for remote viewers via chat.
+1. **Production: Google Cloud Run.** Run `./deploy/cloud-run-deploy.sh` (see [deployment.md](deployment.md)). It deploys exactly one always-on instance with the host PIN in Secret Manager and the QR code pointing to the service URL automatically. 400 phones are a light load.
+2. **Testing: local Docker.** `docker compose up --build -d` on any laptop. Phones on the same Wi-Fi can join via `http://<laptop-IP>:8080/`. Remote viewers can't reach a laptop, so don't use this for the real hybrid event.
 
 Check with corporate IT that the URL is reachable from guest Wi-Fi and mobile data, and that a public voting page is acceptable. It collects no personal data, no cookies beyond local storage, and no logins.
 
