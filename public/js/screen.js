@@ -4,6 +4,7 @@ import { newShow, reduce, publicView } from '/shared/show.js';
 import { character, CHAR_SIZE, CHAR_WIDTH, PROPS, background, SCREEN_POS, OUTDOOR, ICONS } from './art.js';
 import * as audio from './audio.js';
 import { Effects } from './fx.js';
+import { liveState } from './live.js';
 
 const params = new URLSearchParams(location.search);
 const SOLO = params.has('solo');
@@ -474,9 +475,14 @@ async function boot() {
 
 function connect() {
   const st = $('#status');
-  const es = new EventSource(`/api/events?role=screen&pin=${encodeURIComponent(PIN)}${PREVIEW ? '&preview=1' : ''}`);
-  es.addEventListener('state', (e) => { st.textContent = ''; st.className = ''; onState(JSON.parse(e.data)); });
-  es.onerror = () => { st.textContent = 'reconnecting…'; st.className = 'bad'; };
+  liveState({
+    role: 'screen', pin: PIN, preview: PREVIEW, onState,
+    onStatus: (s) => {
+      // Tiny corner hint for the operator only; the audience never sees controls.
+      st.textContent = { live: '', polling: '', reconnecting: 'reconnecting…', offline: 'offline — retrying…', unauthorized: 'wrong PIN in the screen URL (?pin=…)' }[s] ?? '';
+      st.className = s === 'live' || s === 'polling' ? '' : 'bad';
+    },
+  });
 }
 
 boot();

@@ -55,6 +55,7 @@ The big yellow button always shows the next step. Press it (or **Enter**):
 | Server restarted | The show resumes **paused** at the same point. Press Resume. |
 | Server unreachable completely | On the show laptop open `/screen?solo=1` from any copy of the app (even `npm start` locally): Space start/pause, Enter next, 1/2 pick, S skip. |
 | Restart from scratch | Danger zone → **Restart show** (asks to confirm). |
+| Corporate network: screen stays empty/blue, or the host shows “live (polling)” | Corporate proxies often hold back the live stream. The pages detect this within ~3 s and switch to polling every 1–1.5 s automatically, so nothing needs to be done. “live (polling)” in the host panel is normal on such networks. |
 
 ## Presenter tips
 

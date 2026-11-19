@@ -103,6 +103,12 @@ node scripts/e2e.mjs alarm,ai,book,sleigh --url https://<service-url> --pin <PIN
 
 Then open `/host` (enter the PIN) and press **Restart show** to return to the lobby.
 
+### Corporate networks and proxies
+
+Pages receive live updates over Server-Sent Events. Some corporate proxies buffer such streams, and the page then gets no updates at all. Every page detects this within ~3 s and automatically falls back to polling `/api/state` (screen and host every 1 s, phones every 1.5 s). Each state carries a version number, so late or buffered updates can never move a page backwards. The server answers 400 polling phones easily. Test with `node scripts/e2e.mjs <path> --buffering-proxy`.
+
+Messages in Edge's *Issues* tab about a Content Security Policy blocking `eval` come from the corporate environment (injected scripts or extensions), not from the app. The app itself uses no `eval` or inline scripts and sends its own strict CSP.
+
 ### What if the instance restarts during the show?
 
 Cloud Run may occasionally replace an instance. Screens and phones reconnect automatically. With `STATE_BUCKET` set, the show resumes **paused** at the current scene: press **Resume** in the host panel. Votes cast in an open voting round at that moment are lost; re-open the vote or pick A/B by hand. Without a bucket, the show restarts from the lobby. Use the host panel's *Rehearsal → Jump* to return to where you were (choose the earlier decisions, then the scene).

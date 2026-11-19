@@ -30,8 +30,11 @@ export function createServer(opts = {}) {
   /** deviceId -> option for the currently open decision */
   let votes = new Map();
   let voteDecisionKey = null;
-  const clients = new Set(); // { res, role }
+  const clients = new Set(); // { res, role, cid }  live SSE connections
+  const pollers = new Map();  // `${role}:${cid}` -> last poll time (clients behind proxies that buffer SSE)
   let broadcastTimer = null;
+  let rev = 1;                // version of the live state; clients ignore anything older than what they have
+  const touch = () => { rev++; };
 
   function loadState() {
     if (!persist) return null;
@@ -55,25 +58,33 @@ export function createServer(opts = {}) {
     const counts = Object.fromEntries(Object.keys(DECISIONS[show.decision.id].options).map((o) => [o, 0]));
     for (const v of votes.values()) if (v in counts) counts[v]++;
     show = { ...show, decision: { ...show.decision, counts } };
+    touch();
   }
 
   function apply(cmd, arg) {
     const before = show;
     show = reduce(show, cmd, arg);
     if (cmd === 'openVote' && show.phase === 'voting') { votes = new Map(); voteDecisionKey = `${show.decision.id}:${show.decision.openedAt}`; }
-    if (show !== before) { saveState(); broadcast(true); }
+    if (show !== before) { touch(); saveState(); broadcast(true); }
     return show;
   }
 
   function viewFor(role) {
-    if (role === 'host') return { ...publicView(show, { withCounts: true }), clients: counts(), pinRequired: !!PIN };
-    if (role === 'screen') return { ...publicView(show, { withCounts: false }), phones: counts().phone };
-    return publicView(show); // phone
+    if (role === 'host') return { ...publicView(show, { withCounts: true }), rev, clients: counts(), pinRequired: !!PIN };
+    if (role === 'screen') return { ...publicView(show, { withCounts: false }), rev, phones: counts().phone };
+    return { ...publicView(show), rev }; // phone
   }
+  /** Unique connected clients per role: live SSE connections plus clients that polled in the last 8 s. */
   function counts() {
-    const c = { phone: 0, screen: 0, host: 0, preview: 0 };
-    for (const cl of clients) c[cl.role] = (c[cl.role] || 0) + 1;
-    return c;
+    const seen = { phone: new Set(), screen: new Set(), host: new Set(), preview: new Set() };
+    let anon = 0;
+    for (const cl of clients) seen[cl.role]?.add(cl.cid || `anon${anon++}`);
+    const now = Date.now();
+    for (const [k, t] of pollers) {
+      if (now - t > 8000) { pollers.delete(k); continue; }
+      const i = k.indexOf(':'); seen[k.slice(0, i)]?.add(k.slice(i + 1));
+    }
+    return Object.fromEntries(Object.entries(seen).map(([r, set]) => [r, set.size]));
   }
 
   // Broadcast immediately for state changes; throttle the frequent vote-count updates.
@@ -89,7 +100,8 @@ export function createServer(opts = {}) {
       cl.res.write(data);
     }
   }
-  const heartbeat = setInterval(() => { for (const cl of clients) cl.res.write(': ping\n\n'); }, 20000);
+  // Heartbeat as a real event so clients can tell a live stream from one a proxy is holding back.
+  const heartbeat = setInterval(() => { for (const cl of clients) cl.res.write(`event: ping\ndata: ${rev}\n\n`); }, 10000);
 
   // ---------------------------------------------------------------- http
   const server = http.createServer(async (req, res) => {
@@ -101,16 +113,26 @@ export function createServer(opts = {}) {
         const role = ['host', 'screen', 'phone'].includes(url.searchParams.get('role')) ? url.searchParams.get('role') : 'phone';
         if (role !== 'phone' && !pinOk(url.searchParams.get('pin'))) return json(res, 401, { error: 'PIN required' });
         res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive', 'X-Accel-Buffering': 'no' });
-        res.write('retry: 2000\n\n');
-        const cl = { res, role: role === 'screen' && url.searchParams.has('preview') ? 'preview' : role };
+        // 2 KB of padding: some proxies hold back the first bytes of a response before forwarding anything.
+        res.write(`:${' '.repeat(2048)}\nretry: 2000\n\n`);
+        const cl = { res, role: role === 'screen' && url.searchParams.has('preview') ? 'preview' : role, cid: cidOf(url) };
         clients.add(cl);
+        touch();
         res.write(`event: state\ndata: ${JSON.stringify(viewFor(role))}\n\n`); // role 'screen' also serves previews
-        req.on('close', () => { clients.delete(cl); broadcast(false); });
+        req.on('close', () => { clients.delete(cl); touch(); broadcast(false); });
         broadcast(false);
         return;
       }
 
-      if (p === '/api/state' && req.method === 'GET') return json(res, 200, viewFor('phone'));
+      // Polling fallback for networks whose proxies buffer the live stream.
+      if (p === '/api/state' && req.method === 'GET') {
+        const asked = url.searchParams.get('role');
+        const role = ['host', 'screen'].includes(asked) ? asked : 'phone';
+        if (role !== 'phone' && !pinOk(url.searchParams.get('pin'))) return json(res, 401, { error: 'PIN required' });
+        const cid = cidOf(url);
+        if (cid) pollers.set(`${role === 'screen' && url.searchParams.has('preview') ? 'preview' : role}:${cid}`, Date.now());
+        return json(res, 200, viewFor(role));
+      }
 
       if (p === '/api/vote' && req.method === 'POST') {
         const body = await readJson(req);
@@ -140,7 +162,7 @@ export function createServer(opts = {}) {
         if (!pinOk(req.headers['x-host-pin'])) return json(res, 401, { error: 'Wrong PIN' });
         const arg = await readJson(req);
         if (arg.type === 'ended') apply('sceneEnded', { sceneRun: arg.sceneRun });
-        else if (arg.type === 'progress') { const b = show; show = reduce(show, 'progress', arg); if (b !== show) { saveState(); broadcastHostOnly(); } }
+        else if (arg.type === 'progress') { const b = show; show = reduce(show, 'progress', arg); if (b !== show) { touch(); saveState(); broadcastHostOnly(); } }
         return json(res, 200, { ok: true });
       }
 
@@ -179,6 +201,8 @@ export function createServer(opts = {}) {
     const data = `event: state\ndata: ${JSON.stringify(viewFor('host'))}\n\n`;
     for (const cl of clients) if (cl.role === 'host') cl.res.write(data);
   }
+
+  function cidOf(url) { const c = url.searchParams.get('cid') || ''; return /^[A-Za-z0-9_-]{4,64}$/.test(c) ? c : ''; }
 
   function pinOk(given) {
     if (!PIN) return true;

@@ -4,10 +4,12 @@
 // any console error.
 //   node scripts/e2e.mjs alarm,ai,book,sleigh [--shots dir] [--speed 8]
 //   node scripts/e2e.mjs alarm,ai,book,sleigh --url http://localhost:8080 --pin 1234   # test a deployment
+//   node scripts/e2e.mjs alarm,ai,book,sleigh --buffering-proxy   # simulate a corporate proxy that swallows the live stream
 // NOTE: against a deployment this restarts the show — never run it during the live event.
 import { createRequire } from 'node:module';
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
+import http from 'node:http';
 import { createServer } from '../server/index.js';
 
 const require = createRequire(import.meta.url);
@@ -26,8 +28,23 @@ if (shotDir) fs.mkdirSync(shotDir, { recursive: true });
 let server = null, base;
 if (URL_ARG) base = URL_ARG.replace(/\/$/, '');
 else { server = createServer({ persist: false, pin: '' }); await new Promise((r) => server.listen(0, r)); base = `http://127.0.0.1:${server.address().port}`; }
-const host = (cmd, arg = {}) => fetch(`${base}/api/host/${cmd}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Host-Pin': PIN }, body: JSON.stringify(arg) }).then((r) => { if (r.status === 401) throw new Error('Wrong or missing --pin'); return r.json(); });
-const getShow = async () => (server ? server.getShow() : (await fetch(`${base}/api/state`)).json());
+// Optional: put a proxy in front that never forwards the live stream (like a buffering corporate proxy).
+let proxy = null;
+const directBase = base;
+if (args.includes('--buffering-proxy')) {
+  const target = new URL(base);
+  proxy = http.createServer((req, res) => {
+    if (req.url.startsWith('/api/events')) { res.writeHead(200, { 'Content-Type': 'text/event-stream' }); return; } // swallow the stream
+    const up = http.request({ host: target.hostname, port: target.port, path: req.url, method: req.method, headers: req.headers }, (r) => { res.writeHead(r.statusCode, r.headers); r.pipe(res); });
+    up.on('error', () => res.destroy());
+    req.pipe(up);
+  });
+  await new Promise((r) => proxy.listen(0, r));
+  base = `http://127.0.0.1:${proxy.address().port}`;
+  console.log('Simulating a buffering proxy: the live stream is swallowed, pages must fall back to polling.');
+}
+const host = (cmd, arg = {}) => fetch(`${directBase}/api/host/${cmd}`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Host-Pin': PIN }, body: JSON.stringify(arg) }).then((r) => { if (r.status === 401) throw new Error('Wrong or missing --pin'); return r.json(); });
+const getShow = async () => (server ? server.getShow() : (await fetch(`${directBase}/api/state`)).json());
 await host('restart');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -75,7 +92,7 @@ while (Date.now() - t0 < 240000) {
 const final = await getShow();
 await sleep(1500); await shot('end');
 if (shotDir) await phones[1].screenshot({ path: `${shotDir}/phone-end.png` });
-await browser.close(); server?.close();
+await browser.close(); server?.close(); proxy?.close();
 console.log(`path ${path.join(' → ')}`);
 console.log(`scenes: ${seen.join(' → ')}`);
 console.log(`phase: ${final.phase}, ending scene: ${seen.find((x) => x.startsWith('s6_'))}, ${((Date.now() - t0) / 1000).toFixed(0)} s at speed ${speed}`);

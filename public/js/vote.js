@@ -1,3 +1,4 @@
+import { liveState } from './live.js';
 const $ = (s) => document.querySelector(s);
 const app = $('#app');
 const ICONS = { siren: '🚨', check: '✅', robot: '🤖', hammer: '🔨', form: '📋', bolt: '⚡', drone: '🛸', sleigh: '🛷' };
@@ -85,17 +86,8 @@ function onState(s) {
   state = s; render();
 }
 
-// Live connection with polling fallback
-let es, pollTimer, lastMsg = Date.now();
-function connect() {
-  es = new EventSource('/api/events?role=phone');
-  es.addEventListener('state', (e) => { lastMsg = Date.now(); $('#conn').style.display = 'none'; onState(JSON.parse(e.data)); });
-  es.onerror = () => { $('#conn').style.display = 'block'; };
-}
-async function poll() {
-  if (Date.now() - lastMsg < 25000) return;
-  try { const r = await fetch('/api/state'); if (r.ok) { onState(await r.json()); $('#conn').style.display = 'none'; } } catch {}
-}
-connect();
-pollTimer = setInterval(poll, 5000);
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { lastMsg = 0; poll(); } });
+// Live connection (stream, with automatic polling fallback behind buffering proxies)
+liveState({
+  role: 'phone', cid: deviceId, pollMs: 1500, onState,
+  onStatus: (s) => { $('#conn').style.display = s === 'live' || s === 'polling' ? 'none' : 'block'; },
+});

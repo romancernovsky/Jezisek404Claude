@@ -1,3 +1,4 @@
+import { liveState } from './live.js';
 import { SCENES, CAST, beatsFor, DECISIONS, outcome } from '/shared/story.js';
 import { DECISION_ORDER, allPaths, playPath } from '/shared/model.js';
 const $ = (s) => document.querySelector(s);
@@ -121,13 +122,18 @@ $('#paths').innerHTML = '<tr><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>End
 $('#paths').onclick = (e) => { const p = e.target.dataset?.p; if (!p) return; p.split(',').forEach((v, i) => (document.querySelectorAll('#path select')[i].value = v)); toast('Path loaded — choose a scene and press Jump'); };
 
 // ---------------------------------------------------------------- connection
-let es;
+let live;
 async function connect() {
   try { const c = await (await fetch('/api/config')).json(); $('#joinurl').textContent = c.joinUrl || `${location.origin}/vote`; if (c.pinRequired && !PIN) return askPin(); } catch {}
-  es?.close();
-  es = new EventSource(`/api/events?role=host&pin=${encodeURIComponent(PIN)}`);
-  es.addEventListener('state', (e) => { $('#conn').textContent = 'live'; $('#conn').className = 'pill ok'; render(JSON.parse(e.data)); });
-  es.onerror = () => { $('#conn').textContent = 'reconnecting…'; $('#conn').className = 'pill bad'; };
+  live?.close();
+  live = liveState({
+    role: 'host', pin: PIN, onState: render,
+    onStatus: (s) => {
+      if (s === 'unauthorized') return askPin();
+      $('#conn').textContent = { live: 'live', polling: 'live (polling)', reconnecting: 'reconnecting…', offline: 'offline' }[s] || s;
+      $('#conn').className = `pill ${s === 'live' || s === 'polling' ? 'ok' : 'bad'}`;
+    },
+  });
   if (PIN) { $('#preview').src = `/screen?preview&autoplay&pin=${encodeURIComponent(PIN)}`; }
 }
 setInterval(() => { if (S?.phase === 'voting') render(S); }, 1000);
