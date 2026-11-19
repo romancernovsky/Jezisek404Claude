@@ -377,7 +377,7 @@ function revealResult(view) {
     if (d.winner) fx.play('confettiSmall');
   }, d.manual ? 100 : 1900);
 }
-function joinUrl() { return config.publicUrl || `${location.origin}/`; }
+function joinUrl() { return config.joinUrl || `${location.origin}/vote`; }
 
 // ------------------------------------------------------------------ lobby
 function renderLobby(view) {

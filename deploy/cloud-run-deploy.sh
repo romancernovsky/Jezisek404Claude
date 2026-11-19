@@ -68,9 +68,9 @@ gcloud run deploy "$SERVICE" \
 URL="$(gcloud run services describe "$SERVICE" --region "$REGION" --format='value(status.url)')"
 echo
 echo "✅ Deployed: $URL"
-echo "   Screen : $URL/screen?pin=<PIN>"
+echo "   Screen : $URL/?pin=<PIN>"
 echo "   Host   : $URL/host"
-echo "   Phones : ${PUBLIC_URL:-$URL/}"
+echo "   Phones : ${PUBLIC_URL:-$URL/}vote  (QR code)"
 echo "   Health : $(curl -fsS "$URL/healthz" 2>/dev/null || echo 'not reachable yet')"
 echo
 echo "After the event, stop paying for the always-on instance:"

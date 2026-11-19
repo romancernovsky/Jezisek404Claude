@@ -6,9 +6,9 @@ One page for the presenter and the AV/IT helper. Read it once, rehearse twice.
 
 | Page | Who uses it | Device |
 |---|---|---|
-| **`/screen`** | The audience (projector + broadcast feed) | Show laptop, fullscreen, HDMI to the projector/AV mixer |
+| **`/`** or **`/screen`** | The audience (projector + broadcast feed) | Show laptop, fullscreen, HDMI to the projector/AV mixer |
 | **`/host`** | The presenter | A tablet or second laptop (also works on a phone) |
-| **`/`** (QR code) | Everyone, in the room and online | Their own phone |
+| **`/vote`** (QR code) | Everyone, in the room and online | Their own phone |
 | `/map` | Rehearsal: the full branching map, all 16 paths, the script | Any browser |
 
 All pages talk to **one server**. Phones of remote participants must reach it, so it needs a **public HTTPS address** (see *Hosting*).

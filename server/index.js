@@ -1,6 +1,6 @@
 // Ježíšek 404 — show server. Zero runtime dependencies (Node 20+).
-//   /            phone voting page (audience)
-//   /screen      big-screen show (projector / broadcast feed)
+//   / , /screen  big-screen show (projector / broadcast feed)
+//   /vote        phone voting page (audience, opened via the QR code)
 //   /host        presenter control panel
 //   /map         branching story map & rehearsal path table
 // Live updates use Server-Sent Events; votes are plain POSTs. State is persisted to disk so a
@@ -145,12 +145,12 @@ export function createServer(opts = {}) {
       }
 
       if (p === '/api/qr.svg') {
-        const target = url.searchParams.get('u') || publicUrlFor(req);
+        const target = url.searchParams.get('u') || `${publicUrlFor(req)}vote`;
         res.writeHead(200, { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'no-cache' });
         return res.end(qrSvg(target.slice(0, 300)));
       }
 
-      if (p === '/api/config') return json(res, 200, { publicUrl: publicUrlFor(req), pinRequired: !!PIN });
+      if (p === '/api/config') return json(res, 200, { publicUrl: publicUrlFor(req), joinUrl: `${publicUrlFor(req)}vote`, pinRequired: !!PIN });
       if (p === '/healthz') return json(res, 200, { ok: true, phase: show.phase, clients: counts() });
 
       return serveStatic(p, res);
@@ -210,7 +210,7 @@ function readJson(req) {
 }
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.md': 'text/markdown; charset=utf-8' };
-const ROUTES = { '/': 'public/vote.html', '/vote': 'public/vote.html', '/screen': 'public/screen.html', '/host': 'public/host.html', '/map': 'public/map.html' };
+const ROUTES = { '/': 'public/screen.html', '/vote': 'public/vote.html', '/screen': 'public/screen.html', '/host': 'public/host.html', '/map': 'public/map.html' };
 
 function serveStatic(p, res) {
   let rel = ROUTES[p];
@@ -248,7 +248,7 @@ if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.a
     console.log(`\n🎄 Ježíšek 404 is running on port ${port}`);
     console.log(`   Screen : http://localhost:${port}/screen`);
     console.log(`   Host   : http://localhost:${port}/host`);
-    console.log(`   Phones : ${process.env.PUBLIC_URL || '(auto: the address the screen is opened with)'}`);
+    console.log(`   Phones : ${process.env.PUBLIC_URL ? process.env.PUBLIC_URL.replace(/\/?$/, '/vote') : '(auto: <address the screen is opened with>/vote)'}`);
     console.log(`   Map    : http://localhost:${port}/map`);
     console.log(`   PIN    : ${process.env.HOST_PIN ? 'enabled' : 'disabled (set HOST_PIN for production)'} · state file: ${process.env.STATE_FILE || 'data/show-state.json'}\n`);
   });

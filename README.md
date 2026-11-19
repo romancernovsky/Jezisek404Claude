@@ -12,9 +12,9 @@ npm start              # Node ≥ 20, no npm install needed (zero dependencies)
 
 | URL | What |
 |---|---|
-| http://localhost:8080/screen | Big screen (click once for sound, **F** for fullscreen) |
+| http://localhost:8080/ (or /screen) | Big screen (click once for sound, **F** for fullscreen) |
 | http://localhost:8080/host | Presenter control panel |
-| http://localhost:8080/ | Phone voting page (what the QR code opens) |
+| http://localhost:8080/vote | Phone voting page (what the QR code opens) |
 | http://localhost:8080/map | Branching story map, all 16 paths, full script |
 | http://localhost:8080/screen?solo=1 | Offline mode: no server needed for control, keyboard only |
 

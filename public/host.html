@@ -282,7 +282,7 @@ $('#paths').onclick = (e) => { const p = e.target.dataset?.p; if (!p) return; p.
 // ---------------------------------------------------------------- connection
 let es;
 async function connect() {
-  try { const c = await (await fetch('/api/config')).json(); $('#joinurl').textContent = c.publicUrl || `${location.origin}/ (set PUBLIC_URL for the real address)`; if (c.pinRequired && !PIN) return askPin(); } catch {}
+  try { const c = await (await fetch('/api/config')).json(); $('#joinurl').textContent = c.joinUrl || `${location.origin}/vote`; if (c.pinRequired && !PIN) return askPin(); } catch {}
   es?.close();
   es = new EventSource(`/api/events?role=host&pin=${encodeURIComponent(PIN)}`);
   es.addEventListener('state', (e) => { $('#conn').textContent = 'live'; $('#conn').className = 'pill ok'; render(JSON.parse(e.data)); });

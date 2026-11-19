@@ -41,7 +41,7 @@ const phones = [];
 for (let i = 0; i < PHONES; i++) {
   const p = await browser.newPage({ viewport: { width: 390, height: 844 } });
   p.on('pageerror', (e) => errors.push(`phone ${i}: ${e.message}`));
-  await p.goto(`${base}/`);
+  await p.goto(`${base}/vote`);
   phones.push(p);
 }
 await sleep(800);

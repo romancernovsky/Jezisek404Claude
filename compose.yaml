@@ -1,6 +1,6 @@
 # Local test deployment:   docker compose up --build
-# then open http://localhost:8080/screen and http://localhost:8080/host
-# Phones on the same Wi-Fi: http://<your-computer-IP>:8080/  (set PUBLIC_URL so the QR code shows it)
+# then open http://localhost:8080/ (big screen) and http://localhost:8080/host (presenter)
+# Phones on the same Wi-Fi: http://<your-computer-IP>:8080/vote  (set PUBLIC_URL=http://<IP>:8080/ so the QR code shows it)
 services:
   jezisek:
     build: .

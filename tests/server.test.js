@@ -94,8 +94,12 @@ test('health check and public URL detection behind a proxy (Cloud Run)', async (
     assert.equal(h.ok, true); assert.equal(h.phase, 'lobby');
     const local = await (await fetch(`${base}/api/config`)).json();
     assert.match(local.publicUrl, /^http:\/\/127\.0\.0\.1:\d+\/$/);
+    assert.equal(local.joinUrl, `${local.publicUrl}vote`);
     const proxied = await (await fetch(`${base}/api/config`, { headers: { 'X-Forwarded-Proto': 'https', 'X-Forwarded-Host': 'jezisek.example.run.app' } })).json();
     assert.equal(proxied.publicUrl, 'https://jezisek.example.run.app/');
+    assert.equal(proxied.joinUrl, 'https://jezisek.example.run.app/vote');
+    assert.match(await (await fetch(`${base}/`)).text(), /<title>Ježíšek 404 — Screen<\/title>/);
+    assert.match(await (await fetch(`${base}/vote`)).text(), /<title>Ježíšek 404 — Vote<\/title>/);
   } finally { server.close(); }
   const fixed = await start({ publicUrl: 'https://xmas.example.com' });
   try { assert.equal((await (await fetch(`${fixed.base}/api/config`)).json()).publicUrl, 'https://xmas.example.com/'); } finally { fixed.server.close(); }

@@ -5,7 +5,7 @@ The app is a single small container: Node 22 + the app files, **no npm dependenc
 | Setting | Meaning | Local default | Cloud Run |
 |---|---|---|---|
 | `HOST_PIN` | PIN for `/host` and the screen controls | empty = no PIN | from Secret Manager (`jezisek-host-pin`) |
-| `PUBLIC_URL` | Address encoded in the QR code | auto (the address the screen is opened with) | auto = the `*.run.app` URL; set it only for a custom domain |
+| `PUBLIC_URL` | Base address of the site; the QR code points to `<PUBLIC_URL>vote` | auto (the address the screen is opened with) | auto = the `*.run.app` URL; set it only for a custom domain |
 | `STATE_FILE` | Where the show state is persisted | Docker volume `jezisek-data` | in-memory disk, or a GCS bucket with `STATE_BUCKET` |
 | `PORT` | Listening port | 8080 | set by Cloud Run |
 
@@ -22,11 +22,11 @@ docker compose up --build -d  # or: npm run docker:up
 
 | Open | |
 |---|---|
-| http://localhost:8080/screen | big screen (click once for sound, F = fullscreen; add `?pin=…` if you set a PIN) |
+| http://localhost:8080/ | big screen (click once for sound, F = fullscreen; add `?pin=…` if you set a PIN) |
 | http://localhost:8080/host | presenter panel |
 | http://localhost:8080/map | story map & all paths |
 
-**Testing with real phones on the same Wi-Fi:** find your computer's IP address (e.g. `192.168.1.23`), set `PUBLIC_URL=http://192.168.1.23:8080/` in `.env`, run `docker compose up -d` again, and the QR code will point there. Your firewall must allow port 8080. Alternatively, open the screen itself via `http://192.168.1.23:8080/screen` and the QR code follows automatically.
+**Testing with real phones on the same Wi-Fi:** find your computer's IP address (e.g. `192.168.1.23`), set `PUBLIC_URL=http://192.168.1.23:8080/` in `.env`, run `docker compose up -d` again, and the QR code will point to `http://192.168.1.23:8080/vote`. Your firewall must allow port 8080. Alternatively, open the screen itself via `http://192.168.1.23:8080/` and the QR code follows automatically.
 
 Useful commands:
 
