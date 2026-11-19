@@ -67,6 +67,7 @@ public/audio/voices 157 pre-generated xAI TTS lines (+ manifest with durations)
 | `npm run export-docs` | Regenerate `docs/script.md` and `docs/story-map.md` from the story data |
 | `npm run keyframes` | Render start frames for image-to-video clips |
 | `npm run videos` | Register clips placed in `public/video/` |
+| `OPENROUTER_API_KEY=… npm run clips -- <slot> --force` | (Re)generate a Seedance 2.5 clip via OpenRouter |
 
 ## Credits & licences
 

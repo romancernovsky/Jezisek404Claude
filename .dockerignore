@@ -12,3 +12,4 @@ deploy
 .env.*
 compose.yaml
 public/video/keyframes
+public/video/*.prev.mp4

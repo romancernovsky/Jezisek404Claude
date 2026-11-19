@@ -20,7 +20,8 @@
     "docker:up": "docker compose up --build -d",
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f",
-    "deploy": "./deploy/cloud-run-deploy.sh"
+    "deploy": "./deploy/cloud-run-deploy.sh",
+    "clips": "NODE_USE_ENV_PROXY=1 node scripts/generate-clips.mjs"
   },
   "license": "UNLICENSED"
 }

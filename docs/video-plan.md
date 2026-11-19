@@ -1,6 +1,6 @@
-# Cinematic Clips — Higgsfield · Seedance (30-second budget)
+# Cinematic Clips — Seedance 2.5 via OpenRouter (30-second budget)
 
-The show is fully animated without any video. Up to **30 seconds** of Seedance video can be added at the four moments where a cinematic shot has the most impact. Each clip replaces only the title card at the start of its scene. If a file is missing, the animated version plays, so the show never depends on video.
+The show is fully animated without any video. Up to **30 seconds** of Seedance video is added at the four moments where a cinematic shot has the most impact. Each clip replaces only the title card at the start of its scene. If a file is missing, the animated version plays, so the show never depends on video.
 
 | Slot | File | Length | Plays at | Replaces |
 |---|---|---|---|---|
@@ -30,8 +30,30 @@ The show is fully animated without any video. Up to **30 seconds** of Seedance v
 
 Tips: keep camera motion slow (streams compress fast motion badly), avoid generated text, and generate 2–3 takes per slot to pick the best. Clips are muted when sound is not enabled. The show's music keeps playing underneath at a lower volume.
 
-## Install
+## Status: generated ✅
 
-1. Save the chosen clips as MP4 (H.264) with the slot names above in `public/video/`.
+All four clips were generated with **`bytedance/seedance-2.5` through the OpenRouter Video API** at 1280×720, 24 fps, silent (the show's music plays underneath), image-to-video from the keyframes above. Total cost: **6.97 USD** (≈ 0.23 USD per second).
+
+| Clip | Length | Cost | Notes |
+|---|---|---|---|
+| opening | 10 s | $2.32 | slow push-in to the workshop, smoke from the chimney |
+| endingA | 10 s | $2.32 | cast celebrates, fireworks. Known flaw: JOLLY turns away and loses its face in the second half (prompt since fixed — regenerate when budget allows) |
+| endingB | 5 s | $1.17 | relieved shrug, waving seven-armed teddy |
+| endingC | 5 s | $1.17 | glitching 404, sad Ježíšek, Krampus thumbs-up |
+
+## Regenerating a clip
+
+```bash
+npm run keyframes                                    # only if the art changed
+OPENROUTER_API_KEY=sk-or-... npm run clips -- endingA --force
+```
+
+`scripts/generate-clips.mjs` holds the prompts, submits the jobs to `POST https://openrouter.ai/api/v1/videos`, polls until done, downloads to `public/video/<slot>.mp4` (the previous take is kept as `<slot>.prev.mp4`, not committed) and refreshes the manifest. It refuses to submit if the estimated cost exceeds `--max-usd` (default 9).
+
+**Budget tip:** OpenRouter reserves the worst-case price of a job up front (≈ 5.80 USD for a 10 s clip) before charging the real cost (≈ 2.32 USD). A key needs that much headroom left under its limit, or the request is refused with *“Key limit exceeded”*.
+
+## Install other clips manually
+
+1. Save clips as MP4 (H.264) with the slot names above in `public/video/`.
 2. `npm run videos` registers them and checks the 30 s budget.
 3. Rehearse the opening and each ending (host → Rehearsal → load a path ending in A, B and C).
