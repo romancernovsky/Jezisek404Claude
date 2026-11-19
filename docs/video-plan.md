@@ -32,12 +32,12 @@ Tips: keep camera motion slow (streams compress fast motion badly), avoid genera
 
 ## Status: generated ✅
 
-All four clips were generated with **`bytedance/seedance-2.5` through the OpenRouter Video API** at 1280×720, 24 fps, silent (the show's music plays underneath), image-to-video from the keyframes above. Total cost: **6.97 USD** (≈ 0.23 USD per second).
+All four clips were generated with **`bytedance/seedance-2.5` through the OpenRouter Video API** at 1280×720, 24 fps, silent (the show's music plays underneath), image-to-video from the keyframes above. Total cost: **9.29 USD** including one retake of ending A (≈ 0.23 USD per second).
 
 | Clip | Length | Cost | Notes |
 |---|---|---|---|
 | opening | 10 s | $2.32 | slow push-in to the workshop, smoke from the chimney |
-| endingA | 10 s | $2.32 | cast celebrates, fireworks. Known flaw: JOLLY turns away and loses its face in the second half (prompt since fixed — regenerate when budget allows) |
+| endingA | 10 s | $2.32 (+ $2.32 first take) | cast celebrates, hats fly, fireworks and confetti; retaken so JOLLY always faces the camera |
 | endingB | 5 s | $1.17 | relieved shrug, waving seven-armed teddy |
 | endingC | 5 s | $1.17 | glitching 404, sad Ježíšek, Krampus thumbs-up |
 
