@@ -1,0 +1,19 @@
+import { SCENES, CAST, DECISIONS, CONSEQUENCES, outcome } from '/shared/story.js';
+import { DECISION_ORDER, allPaths, playPath } from '/shared/model.js';
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const node = (id, extra = '') => { const s = SCENES[id]; return `<div class="node ${s.ending ? 'end ' + s.ending : ''}"><div class="t">${esc(s.title)}</div><div class="id">${id}</div>${extra ? `<div class="c">${extra}</div>` : ''}</div>`; };
+const dec = (d) => `<div class="node dec"><div class="t">🗳 ${d.toUpperCase()}: ${esc(DECISIONS[d].question)}</div><div class="c">A: ${esc(Object.values(DECISIONS[d].options)[0].label)} · B: ${esc(Object.values(DECISIONS[d].options)[1].label)}</div></div>`;
+const act = (n, lane) => `<div class="act"><div class="n">${n}</div><div class="lane">${lane}</div></div>`;
+document.getElementById('flow').innerHTML = [
+  act('ACT 1', node('s0_opening') + node('s1_cozy') + node('s1_empty')), act('', dec('d1')),
+  act('ACT 2', node('s2_alarm', 'if Raise the alarm') + node('s2_green', 'if Keep it green')), act('', node('s2_options', 'branches rejoin')), act('', dec('d2')),
+  act('ACT 3', node('s3_ai', 'if AI Mega-Factory') + node('s3_elves', 'if Elf Night Shift')), act('', node('s3_krampus', 'rejoin · reacts to D1 + D2')), act('', dec('d3')),
+  act('ACT 4', node('s4_audit', 'only if D1 = Keep it green') ), act('', node('s4_book', 'if By the book') + node('s4_shortcut', 'if Shortcut')), act('', node('s4_crisis', 'rejoin · reacts to D1–D3')), act('', dec('d4')),
+  act('ACT 5', node('s5_drones', 'if Drone Swarm') + node('s5_sleigh', 'if Sleigh Relay')), act('', node('s6_endA', 'ending computed from state') + node('s6_endB') + node('s6_endC')), act('', node('s7_review', 'recap of all 4 decisions')),
+].join('');
+const ENDN = { A: 'Christmas Saved!', B: 'Saved… sort of', C: 'Christmas Not Found' };
+document.getElementById('paths').innerHTML = '<tr><th>#</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>Hours left</th><th>Gifts</th><th>Quality</th><th>Spirit</th><th>Ending</th><th>Why</th></tr>' +
+  allPaths().map((p, i) => { const s = playPath(p); const o = outcome(s); return `<tr><td>${i + 1}</td>${p.map((x, k) => `<td>${esc(DECISIONS[DECISION_ORDER[k]].options[x].label)}</td>`).join('')}<td>${s.hours}</td><td>${s.gifts}%</td><td>${s.quality}%</td><td>${s.spirit}%</td><td class="${o.ending}">${o.ending} · ${ENDN[o.ending]} (${o.value}% happy)</td><td>${o.problems.join(', ') || '—'}</td></tr>`; }).join('');
+document.getElementById('cons').innerHTML = '<tr><th>Decision</th><th>Option</th><th>Consequence</th></tr>' + Object.entries(CONSEQUENCES).map(([k, v]) => { const [d, o] = k.split(':'); return `<tr><td>${d.toUpperCase()}</td><td>${esc(DECISIONS[d].options[o].label)}</td><td>${esc(v)}</td></tr>`; }).join('');
+document.getElementById('scenes').innerHTML = Object.entries(SCENES).map(([id, sc]) => `<details class="scene"><summary>Act ${sc.act} · ${esc(sc.title)} <span class="muted">(${id} · ${sc.bg})</span></summary>
+  ${sc.beats.map((b) => `<div class="beat">${b.text ? `<span class="who" style="color:${CAST[b.who]?.color}">${esc(b.alsoSpeaking ? 'EVERYONE' : CAST[b.who]?.name.toUpperCase())}</span> ${esc(b.text)}` : b.card ? `<i>[Title card: ${esc(b.card.title)} — ${esc(b.card.sub || '')}]</i>` : `<i class="muted">[${esc([b.fx && 'fx: ' + b.fx, b.sfx && 'sound: ' + b.sfx, (b.do || []).map((a) => Object.entries(a).map(([k, v]) => `${k}:${v}`).join(' ')).join('; ')].filter(Boolean).join(' · '))}]</i>`}${b.when ? `<span class="cond">if ${esc(b.when)}</span>` : ''}</div>`).join('') || '<div class="beat muted">Generated from the final state (decision recap + credits).</div>'}</details>`).join('');

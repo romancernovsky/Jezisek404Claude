@@ -209,6 +209,13 @@ function readJson(req) {
   });
 }
 
+// Strict policy: no eval, no inline scripts, no third-party code. The app needs none of them, so it also
+// runs on locked-down corporate browsers that enforce the same rules.
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self'; font-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'",
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'same-origin',
+};
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp3': 'audio/mpeg', '.mp4': 'video/mp4', '.webm': 'video/webm', '.woff2': 'font/woff2', '.ico': 'image/x-icon', '.md': 'text/markdown; charset=utf-8' };
 const ROUTES = { '/': 'public/screen.html', '/vote': 'public/vote.html', '/screen': 'public/screen.html', '/host': 'public/host.html', '/map': 'public/map.html' };
 
@@ -224,7 +231,7 @@ function serveStatic(p, res) {
     if (err || !st.isFile()) return json(res, 404, { error: 'Not found' });
     const ext = path.extname(file);
     const longCache = /\/(audio|video|img)\//.test(file);
-    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': longCache ? 'public, max-age=86400' : 'no-cache' });
+    res.writeHead(200, { 'Content-Type': MIME[ext] || 'application/octet-stream', 'Content-Length': st.size, 'Cache-Control': longCache ? 'public, max-age=86400' : 'no-cache', ...SECURITY_HEADERS });
     fs.createReadStream(file).pipe(res);
   });
 }

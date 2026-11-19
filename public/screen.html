@@ -6,11 +6,7 @@
 <title>Ježíšek 404 — Screen</title>
 <link rel="icon" href="/img/favicon.svg">
 <link rel="stylesheet" href="/css/screen.css">
-<script>
-  // The site root shows the big screen. A phone that lands here (e.g. someone typed the base address)
-  // is sent to the voting page instead. /screen itself is never redirected.
-  if (location.pathname === '/' && matchMedia('(pointer: coarse)').matches && Math.min(screen.width, screen.height) < 820) location.replace('/vote' + location.search);
-</script>
+<script src="/js/redirect.js"></script>
 </head>
 <body>
 <div id="viewport">

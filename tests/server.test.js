@@ -104,3 +104,17 @@ test('health check and public URL detection behind a proxy (Cloud Run)', async (
   const fixed = await start({ publicUrl: 'https://xmas.example.com' });
   try { assert.equal((await (await fetch(`${fixed.base}/api/config`)).json()).publicUrl, 'https://xmas.example.com/'); } finally { fixed.server.close(); }
 });
+
+test('pages are served with a strict CSP (no eval, no inline scripts) and contain no inline scripts', async () => {
+  const { server, base } = await start();
+  try {
+    for (const p of ['/', '/vote', '/host', '/map']) {
+      const r = await fetch(base + p);
+      const csp = r.headers.get('content-security-policy');
+      assert.match(csp, /script-src 'self'(;|$)/, p);
+      assert.doesNotMatch(csp, /unsafe-eval|script-src[^;]*unsafe-inline/, p);
+      const html = await r.text();
+      assert.doesNotMatch(html, /<script(?![^>]*\bsrc=)[^>]*>/, `${p} has an inline <script>`);
+    }
+  } finally { server.close(); }
+});
